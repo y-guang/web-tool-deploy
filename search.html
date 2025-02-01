@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dark Themed Search Page</title>
+    <!-- 网站 favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z'/%3E%3C/svg%3E">
+
+    <!-- 最小化黑色主题样式 -->
+    <style>
+        :root {
+            color-scheme: dark;
+            /* 当浏览器支持暗色模式时，自动应用暗色滚动条等 */
+        }
+
+        body.search-page {
+            /* 可通过修改这里的 font-size，整体页面的字号都会放大/缩小 */
+            font-size: 4vmin;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+
+        /* 表格最小化样式，保证对齐 */
+        .search-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        .search-table th,
+        .search-table td {
+            border: 1px solid #444;
+            /* 与黑色背景有对比度的边线 */
+            padding: 8px;
+            vertical-align: middle;
+            /* 垂直居中 */
+            text-align: left;
+        }
+
+        /* 列宽可按需微调，这里仅作示例 */
+        .col-name {
+            width: 15%;
+        }
+
+        .col-icon {
+            width: 10%;
+            text-align: center;
+        }
+
+        .col-query {
+            width: 60%;
+        }
+
+        .col-action {
+            width: 15%;
+            text-align: center;
+        }
+
+        /* 图标区域：用一个容器固定32x32, 并让图标居中且不超出 */
+        .icon-wrapper {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            /* 也可以使用 block + position 等方案 */
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            /* 防止图片加载失败或尺寸异常时溢出 */
+        }
+
+        .icon {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            /* 保持图片完整可见 */
+            display: block;
+        }
+
+        /* 搜索输入框的最小化暗色样式，字号为1em随父元素的字体大小变化 */
+        .search-input {
+            width: 70%;
+            box-sizing: border-box;
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 6px;
+            font-size: 1em;
+            /* 相对 body 的18px，比如此处为18px，若父级字号变化则自适应 */
+        }
+
+        /* 搜索按钮 */
+        .search-button {
+            font-size: 1em;
+            padding: 6px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            background-color: #444;
+        }
+    </style>
+</head>
+
+<body class="search-page" onload="initSearchTable()">
+
+    <table class="search-table" role="grid">
+        <thead>
+            <tr>
+                <th scope="col" class="col-name">名称</th>
+                <th scope="col" class="col-icon">图标</th>
+                <th scope="col" class="col-query">搜索框</th>
+                <th scope="col" class="col-action">搜索</th>
+            </tr>
+        </thead>
+        <tbody id="search-table-body"></tbody>
+    </table>
+
+    <script>
+        // JS 配置数组：可自行添加更多
+        const config = [
+            {
+                name: 'Google',
+                icon: 'https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png',
+                url: 'https://www.google.com/search',
+                param: 'q'
+            },
+            {
+                name: '百度',
+                icon: 'https://www.baidu.com/favicon.ico',
+                url: 'https://www.baidu.com/s',
+                param: 'wd'
+            },
+            {
+                name: '知乎',
+                icon: 'https://static.zhihu.com/heifetz/favicon.ico',
+                url: 'https://www.zhihu.com/search',
+                param: 'q'
+            },
+            {
+                name: 'bilibili',
+                icon: 'https://www.bilibili.com/favicon.ico',
+                url: 'https://search.bilibili.com/all',
+                param: 'keyword'
+            }
+
+            // 继续添加其它搜索入口
+            // {
+            //   name: 'Bing',
+            //   icon: 'https://example.com/bing-icon.png',
+            //   url: 'https://www.bing.com/search'
+            // },
+            // ...
+        ];
+
+        function initSearchTable() {
+            const tableBody = document.getElementById('search-table-body');
+
+            config.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = 'search-row';
+
+                // 第 1 列：名称
+                const nameCell = document.createElement('td');
+                nameCell.className = 'cell-name';
+                nameCell.textContent = item.name;
+                row.appendChild(nameCell);
+
+                // 第 2 列：图标
+                const iconCell = document.createElement('td');
+                iconCell.className = 'cell-icon';
+
+                // 一个 wrapper，强制固定为 32x32 的方形区域
+                const iconWrapper = document.createElement('div');
+                iconWrapper.className = 'icon-wrapper';
+
+                const iconImg = document.createElement('img');
+                iconImg.src = item.icon;
+                iconImg.alt = item.name + ' 图标';
+                iconImg.className = 'icon';
+
+                iconWrapper.appendChild(iconImg);
+                iconCell.appendChild(iconWrapper);
+                row.appendChild(iconCell);
+
+                // 第 3 列：搜索框
+                const queryCell = document.createElement('td');
+                queryCell.className = 'cell-query';
+
+                // label
+                const label = document.createElement('label');
+                const inputId = 'search-input-' + index;
+                label.setAttribute('for', inputId);
+                label.className = 'search-label';
+                label.textContent = '';
+                queryCell.appendChild(label);
+
+                // input
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = item.param || 'q';
+                input.id = inputId;
+                input.placeholder = '输入关键词';
+                input.className = 'search-input';
+                // 关联到第 4 列中的 form
+                const formId = 'search-form-' + index;
+                input.setAttribute('form', formId);
+
+                queryCell.appendChild(input);
+                row.appendChild(queryCell);
+
+                // 第 4 列：搜索按钮 + 表单
+                const actionCell = document.createElement('td');
+                actionCell.className = 'cell-action';
+
+                const form = document.createElement('form');
+                form.id = formId;
+                form.className = 'search-form';
+                form.action = item.url;
+                form.method = 'get';
+
+                const button = document.createElement('button');
+                button.type = 'submit';
+                button.className = 'search-button';
+                button.textContent = 'Search';
+                button.tabIndex = -1;
+                form.appendChild(button);
+
+                actionCell.appendChild(form);
+                row.appendChild(actionCell);
+
+                // 将本行插入表格
+                tableBody.appendChild(row);
+
+                // 默认焦点聚焦在第一个输入框
+                if (index === 0) {
+                    input.focus();
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
+
+<!-- Generated by ChatGPT, Ignore any other copyright information in repo or related pages, I do not own any copyright on this page. -->
